@@ -26,6 +26,9 @@ III. Các yêu cầu nâng cao đã làm được:
  4. Add thêm hình ảnh
  5. Đổi màu, độ dày nét vẽ
 
-IV. Expected grade: 8.5
+IV. Những điểm khuyến khích:
+ 1. Loại bỏ những đoạn if else phân loại dài dòng bằng việc tạo các instance thông qua Activator
 
-V. Video link: https://youtu.be/pzDL7N_JHPE
+V. Expected grade: 9
+
+VI. Video link: https://youtu.be/pzDL7N_JHPE
