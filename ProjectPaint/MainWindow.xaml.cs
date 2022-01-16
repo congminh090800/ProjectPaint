@@ -1,6 +1,7 @@
 ﻿using GraphicsLibrary;
 using System;
 using System.Collections.Generic;
+using System.Diagnostics;
 using System.IO;
 using System.Linq;
 using System.Text;
@@ -26,26 +27,34 @@ namespace ProjectPaint
         Point2D anchor = new Point2D(-1, -1);
         ShapeType currentShapeType = ShapeType.Line2D;
         string dashStyle = "";
+        bool shiftMode;
         List<IShape> shapes = new List<IShape>();
-        IShape preview = new Line2D();
+        IShape preview;
         public MainWindow()
         {
             InitializeComponent();
+            DllLoader.execute();
+            var types = DllLoader.Types;
+            KeyDown += new KeyEventHandler(OnButtonKeyDown);
+            KeyUp += new KeyEventHandler(OnButtonKeyUp);
         }
 
         private void LineButton_Click(object sender, RoutedEventArgs e)
         {
             currentShapeType = ShapeType.Line2D;
-            preview = new Line2D();
         }
 
         private void Rectangle_Click(object sender, RoutedEventArgs e)
         {
             currentShapeType = ShapeType.Rectangle2D;
         }
-
+        private void Ellipse_Click(object sender, RoutedEventArgs e)
+        {
+            currentShapeType = ShapeType.Ellipse2D;
+        }
         private void DrawingCanvas_MouseDown(object sender, MouseButtonEventArgs e)
         {
+            preview = (IShape)GetInstance($"{currentShapeType}");
             isDrawing = true;
             Point currenCoord = e.GetPosition(DrawingCanvas);
             anchor.X = currenCoord.X;
@@ -54,13 +63,19 @@ namespace ProjectPaint
         }
 
         private void DrawingCanvas_MouseMove(object sender, MouseEventArgs e)
-        {
+        {                                                                                               
             if (isDrawing)
             {
+                DrawingCanvas.Children.Clear();
                 Point coord = e.GetPosition(DrawingCanvas);
+
                 Point2D point = new Point2D(coord.X, coord.Y);
                 preview.HandleEnd(point);
-                DrawingCanvas.Children.Clear();
+                if (shiftMode)
+                {
+                    preview.HandleShiftMode();
+                }
+                preview.DashStyle = dashStyle;
                 foreach (var shape in shapes)
                 {
                     UIElement element = shape.Draw();
@@ -78,10 +93,10 @@ namespace ProjectPaint
             Point2D point = new Point2D(coord.X, coord.Y);
             preview.Color = GlobalOptions.strokeColor;
             preview.HandleEnd(point);
-            if (currentShapeType == ShapeType.Line2D)
-            {
-                preview = new Line2D();
+            if (shiftMode) {
+                preview.HandleShiftMode();
             }
+            preview.DashStyle = dashStyle;
             shapes.Add(preview);
             DrawingCanvas.Children.Clear();
             foreach (var shape in shapes)
@@ -127,6 +142,45 @@ namespace ProjectPaint
         private void Load_Click(object sender, RoutedEventArgs e)
         {
             CreateLoadBitmap(DrawingCanvas, @"D:\out.png");
+        }
+
+        private void OnButtonKeyDown(object sender, KeyEventArgs e)
+        {
+            if (e.Key == Key.LeftShift)
+            {
+                shiftMode = true;
+            }
+        }
+        private void OnButtonKeyUp(object sender, KeyEventArgs e)
+        {
+            if (e.Key == Key.LeftShift)
+            {
+                shiftMode = false;
+            }
+        }
+
+        public object GetInstance(string strFullyQualifiedName)
+        {
+            Type type = Type.GetType(strFullyQualifiedName);
+            if (type != null)
+                return Activator.CreateInstance(type);
+            var types = DllLoader.Types;
+            foreach (var t in types)
+            {
+                if (t.Name == strFullyQualifiedName)
+                    return Activator.CreateInstance(t);
+            }
+            return null;
+        }
+
+        private void DashSwitch_Checked(object sender, RoutedEventArgs e)
+        {
+            dashStyle = GlobalOptions.dashStyle;
+        }
+
+        private void DashSwitch_Unchecked(object sender, RoutedEventArgs e)
+        {
+            dashStyle = "";
         }
     }
 }

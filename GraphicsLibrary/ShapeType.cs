@@ -10,5 +10,6 @@ namespace GraphicsLibrary
     {
         Line2D,
         Rectangle2D,
+        Ellipse2D,
     }
 }

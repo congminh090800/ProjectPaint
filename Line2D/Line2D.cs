@@ -37,5 +37,18 @@ namespace GraphicsLibrary
 
             return l;
         }
+
+        public override void HandleShiftMode()
+        {
+            double diff = Math.Abs(End.X - Start.X) - Math.Abs(End.Y - Start.Y);
+            if (diff > 0)
+            {
+                End.Y = Start.Y;
+            }
+            else
+            {
+                End.X = Start.X;
+            }
+        }
     }
 }

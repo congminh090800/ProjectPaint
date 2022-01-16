@@ -54,5 +54,9 @@ namespace GraphicsLibrary
 
             return l;
         }
+
+        public override void HandleShiftMode()
+        {
+        }
     }
 }
