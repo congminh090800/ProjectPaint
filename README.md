@@ -27,3 +27,5 @@ III. Các yêu cầu nâng cao đã làm được:
  5. Đổi màu, độ dày nét vẽ
 
 IV. Expected grade: 8.5
+
+V. Video link: https://youtu.be/pzDL7N_JHPE
