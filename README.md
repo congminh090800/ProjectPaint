@@ -28,6 +28,7 @@ III. Các yêu cầu nâng cao đã làm được:
 
 IV. Những điểm khuyến khích:
  1. Loại bỏ những đoạn if else phân loại dài dòng bằng việc tạo các instance thông qua Activator
+ 2. Các phần xử lý được viết thành các modle riêng biêt và portable
 
 V. Expected grade: 9
 
