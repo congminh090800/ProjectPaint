@@ -35,8 +35,8 @@ namespace GraphicsLibrary
 
         public override void HandleEnd(Point2D point)
         {
-            X = point.X;
-            Y = point.Y;
+            X = point.X + 1;
+            Y = point.Y + 1;
         }
 
         public override UIElement Draw()
@@ -45,7 +45,7 @@ namespace GraphicsLibrary
             {
                 X1 = X,
                 Y1 = Y,
-                X2 = X,
+                X2 = X + 5,
                 Y2 = Y,
                 StrokeThickness = StrokeThickness,
                 Stroke = new SolidColorBrush(Color),

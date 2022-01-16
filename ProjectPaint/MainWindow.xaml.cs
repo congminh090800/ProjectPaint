@@ -5,6 +5,7 @@ using System.Diagnostics;
 using System.IO;
 using System.Linq;
 using System.Text;
+using System.Text.RegularExpressions;
 using System.Threading.Tasks;
 using System.Windows;
 using System.Windows.Controls;
@@ -28,7 +29,10 @@ namespace ProjectPaint
         ShapeType currentShapeType = ShapeType.Line2D;
         string dashStyle = "";
         bool shiftMode;
+        bool ctrlMode;
         List<IShape> shapes = new List<IShape>();
+        Dictionary<int, List<Image>> images = new Dictionary<int, List<Image>>();
+        List<IShape> redos = new List<IShape>();
         IShape preview;
         public MainWindow()
         {
@@ -54,7 +58,10 @@ namespace ProjectPaint
         }
         private void DrawingCanvas_MouseDown(object sender, MouseButtonEventArgs e)
         {
+            redos.Clear();
+            double thickness = double.Parse(thicknessBox.Text);
             preview = (IShape)GetInstance($"{currentShapeType}");
+            preview.StrokeThickness = thickness;
             isDrawing = true;
             Point currenCoord = e.GetPosition(DrawingCanvas);
             anchor.X = currenCoord.X;
@@ -66,7 +73,6 @@ namespace ProjectPaint
         {                                                                                               
             if (isDrawing)
             {
-                DrawingCanvas.Children.Clear();
                 Point coord = e.GetPosition(DrawingCanvas);
 
                 Point2D point = new Point2D(coord.X, coord.Y);
@@ -76,11 +82,8 @@ namespace ProjectPaint
                     preview.HandleShiftMode();
                 }
                 preview.DashStyle = dashStyle;
-                foreach (var shape in shapes)
-                {
-                    UIElement element = shape.Draw();
-                    DrawingCanvas.Children.Add(element);
-                }
+                DrawingCanvas.Children.Clear();
+                redraw();
                 preview.Color = GlobalOptions.previewColor;
                 DrawingCanvas.Children.Add(preview.Draw());
             }
@@ -91,18 +94,20 @@ namespace ProjectPaint
             isDrawing = false;
             Point coord = e.GetPosition(DrawingCanvas);
             Point2D point = new Point2D(coord.X, coord.Y);
-            preview.Color = GlobalOptions.strokeColor;
-            preview.HandleEnd(point);
-            if (shiftMode) {
-                preview.HandleShiftMode();
-            }
-            preview.DashStyle = dashStyle;
-            shapes.Add(preview);
-            DrawingCanvas.Children.Clear();
-            foreach (var shape in shapes)
+            if (preview != null)
             {
-                var element = shape.Draw();
-                DrawingCanvas.Children.Add(element);
+                preview.Color = GlobalOptions.strokeColor;
+                preview.HandleEnd(point);
+                if (shiftMode)
+                {
+                    preview.HandleShiftMode();
+                }
+                preview.DashStyle = dashStyle;
+                System.Drawing.Color temp = System.Drawing.Color.FromName(colorBox.Text);
+                preview.Color = Color.FromArgb(temp.A, temp.R, temp.G, temp.B);
+                shapes.Add(preview);
+                DrawingCanvas.Children.Clear();
+                redraw();
             }
         }
 
@@ -124,24 +129,57 @@ namespace ProjectPaint
 
         private void Save_Click(object sender, RoutedEventArgs e)
         {
-            CreateSaveBitmap(DrawingCanvas, @"D:\out.png");
+            Microsoft.Win32.SaveFileDialog saveFileDialog = new Microsoft.Win32.SaveFileDialog();
+            //saveFileDialog.InitialDirectory = @"C:\";
+            saveFileDialog.Filter = "Images|*.png";
+            saveFileDialog.Title = "Save as PNG";
+            saveFileDialog.RestoreDirectory = true;
+            Nullable<bool> result = saveFileDialog.ShowDialog();
+            if (result == true)
+            {
+                String fileName = saveFileDialog.FileName;
+                CreateSaveBitmap(DrawingCanvas, fileName);
+            }
         }
 
-        private void CreateLoadBitmap(Canvas canvas, string filename)
+        private void CreateLoadBitmap(ref Canvas canvas, string filename)
         {
             BitmapImage bitmap = new BitmapImage();
             bitmap.BeginInit();
-            bitmap.UriSource = new Uri(filename);
+            bitmap.UriSource = new Uri(filename, UriKind.Absolute);
             bitmap.EndInit();
 
             Image image = new Image();
             image.Source = bitmap;
+            image.Width = bitmap.Width;
+            image.Height = bitmap.Height;
+            if (bitmap.Width > canvas.Width || double.IsNaN(canvas.Width))
+            {
+                canvas.Width = bitmap.Width > canvas.ActualWidth ? bitmap.Width : double.NaN;
+            }
+            if (bitmap.Height > canvas.Height || double.IsNaN(canvas.Height))
+            {
+                canvas.Height = bitmap.Height > canvas.ActualHeight ? bitmap.Height : double.NaN;
+            }
+            if (!images.ContainsKey(shapes.Count))
+            {
+                images[shapes.Count] = new List<Image>();
+            }
+            images[shapes.Count].Add(image);
             canvas.Children.Add(image);
         }
 
         private void Load_Click(object sender, RoutedEventArgs e)
         {
-            CreateLoadBitmap(DrawingCanvas, @"D:\out.png");
+            Microsoft.Win32.OpenFileDialog openFileDialog = new Microsoft.Win32.OpenFileDialog();
+            openFileDialog.Title = "Load image";
+            openFileDialog.Filter = "Images|*.png;*.bmp;*.jpg";
+            openFileDialog.RestoreDirectory = true;
+            if (openFileDialog.ShowDialog() == true)
+            {
+                preview = null;
+                CreateLoadBitmap(ref DrawingCanvas, openFileDialog.FileName);
+            };
         }
 
         private void OnButtonKeyDown(object sender, KeyEventArgs e)
@@ -149,6 +187,39 @@ namespace ProjectPaint
             if (e.Key == Key.LeftShift)
             {
                 shiftMode = true;
+            } else if (e.Key == Key.LeftCtrl)
+            {
+                ctrlMode = true;
+            } else if (e.Key == Key.Z && ctrlMode)
+            {
+                if (images.ContainsKey(0) && shapes.Count == 0)
+                {
+                    if (images[0].Count > 0)
+                    {
+                        images[0].RemoveAt(images[0].Count - 1);
+                        DrawingCanvas.Children.RemoveAt(DrawingCanvas.Children.Count - 1);
+                    }
+                }
+                if (shapes.Count > 0)
+                {
+                    if (images.ContainsKey(shapes.Count) && images[shapes.Count].Count > 0)
+                    {
+                        images[shapes.Count].RemoveAt(images[shapes.Count].Count - 1);
+                    } else
+                    {
+                        redos.Add(shapes[shapes.Count - 1]);
+                        shapes.RemoveAt(shapes.Count - 1);
+                    }
+                    DrawingCanvas.Children.RemoveAt(DrawingCanvas.Children.Count - 1);
+                }
+            } else if (e.Key == Key.Y && ctrlMode)
+            {
+                if (redos.Count > 0)
+                {
+                    shapes.Add(redos[redos.Count - 1]);
+                    DrawingCanvas.Children.Add(shapes[shapes.Count - 1].Draw());
+                    redos.RemoveAt(redos.Count - 1);
+                }
             }
         }
         private void OnButtonKeyUp(object sender, KeyEventArgs e)
@@ -156,6 +227,10 @@ namespace ProjectPaint
             if (e.Key == Key.LeftShift)
             {
                 shiftMode = false;
+            }
+            else if (e.Key == Key.LeftCtrl)
+            {
+                ctrlMode = false;
             }
         }
 
@@ -181,6 +256,26 @@ namespace ProjectPaint
         private void DashSwitch_Unchecked(object sender, RoutedEventArgs e)
         {
             dashStyle = "";
+        }
+        private void redraw()
+        {
+            for (int i = 0; i < shapes.Count; i++)
+            {
+                if (images.ContainsKey(i))
+                {
+                    foreach (var image in images[i])
+                    {
+                        DrawingCanvas.Children.Add(image);
+                    }
+                }
+                var element = shapes[i].Draw();
+                DrawingCanvas.Children.Add(element);
+            }
+        }
+
+        private void Pen_Click(object sender, RoutedEventArgs e)
+        {
+            currentShapeType = ShapeType.Point2D;
         }
     }
 }

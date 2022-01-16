@@ -8,6 +8,7 @@ namespace GraphicsLibrary
 {
     public enum ShapeType
     {
+        Point2D,
         Line2D,
         Rectangle2D,
         Ellipse2D,

@@ -9,9 +9,9 @@ Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "GraphicsLibrary", "Graphics
 EndProject
 Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "Line2D", "Line2D\Line2D.csproj", "{C87459FD-6796-43B0-A3F7-57086F44C827}"
 EndProject
-Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "Rectangle2D", "Rectangle2D\Rectangle2D.csproj", "{4BCBF2F6-FCD9-490A-A7CC-C67C6C9D8D89}"
+Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "Rectangle2D", "Rectangle2D\Rectangle2D.csproj", "{4BCBF2F6-FCD9-490A-A7CC-C67C6C9D8D89}"
 EndProject
-Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "Ellipse2D", "Ellipse2D\Ellipse2D.csproj", "{1BFF9DF8-B8F7-4DEA-86BA-8C3F6878BEB8}"
+Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "Ellipse2D", "Ellipse2D\Ellipse2D.csproj", "{1BFF9DF8-B8F7-4DEA-86BA-8C3F6878BEB8}"
 EndProject
 Global
 	GlobalSection(SolutionConfigurationPlatforms) = preSolution
