@@ -7,10 +7,7 @@
   </PropertyGroup>
 
   <ItemGroup>
-    <ProjectReference Include="..\Ellipse2D\Ellipse2D.csproj" />
     <ProjectReference Include="..\GraphicsLibrary\GraphicsLibrary.csproj" />
-    <ProjectReference Include="..\Line2D\Line2D.csproj" />
-    <ProjectReference Include="..\Rectangle2D\Rectangle2D.csproj" />
   </ItemGroup>
 
 </Project>
